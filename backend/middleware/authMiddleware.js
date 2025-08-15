@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import User from "../models/user.js";
 import { verifyToken } from "../utils/token.js";
 
 export const guestOnlyMiddleware = (req, res, next) => {
