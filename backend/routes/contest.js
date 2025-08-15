@@ -5,6 +5,6 @@ const contestRouter = express.Router();
 
 contestRouter.post("/entry", uploadContestEntry);
 contestRouter.get("/leaderboard", getLeaderboard);
-// contestRouter.post("/vote/:id", authMiddleware, voteEntry);
+contestRouter.post("/vote/:entryId", voteEntry);
 
 export default contestRouter;

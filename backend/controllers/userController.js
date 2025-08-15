@@ -85,3 +85,9 @@ export async function saveUserData(req, res) {
 		return res.status(500).json({ success: false, error: error.message });
 	}
 }
+
+export async function profile(req, res) {
+	return res
+		.status(200)
+		.json({ success: true, user: { _id: req.user._id, name: req.user.name, email: req.user.email } });
+}

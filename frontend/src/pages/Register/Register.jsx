@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { apiUrl } from "../../configs/envExport";
 
-const apiUrl = process.env.REACT_APP_API_URL;
-
-const SignupPage = () => {
+const Register = () => {
 	const [formData, setFormData] = useState({
 		email: "",
 		name: "",
@@ -102,7 +101,7 @@ const SignupPage = () => {
 			toast.success("Account created successfully!");
 			// Redirect to dashboard or login
 			setTimeout(() => {
-				window.location.href = "/dashboard";
+				window.location.href = "/login";
 			}, 1500);
 		} catch (error) {
 			toast.error(error.response?.data?.error || "Failed to create account");
@@ -148,6 +147,7 @@ const SignupPage = () => {
 										value={formData.email}
 										readOnly
 										style={{ cursor: "not-allowed" }}
+										aria-label="Email address of your account"
 									/>
 									<small className="text-muted">Email from your payment cannot be changed</small>
 								</div>
@@ -165,6 +165,7 @@ const SignupPage = () => {
 										onChange={handleInputChange}
 										placeholder="Enter your full name"
 										required
+										aria-label="Full name"
 									/>
 								</div>
 
@@ -182,6 +183,7 @@ const SignupPage = () => {
 										placeholder="Create a secure password"
 										minLength="6"
 										required
+										aria-label="Password you would use for your account"
 									/>
 									<small className="text-muted">At least 6 characters</small>
 								</div>
@@ -199,13 +201,15 @@ const SignupPage = () => {
 										onChange={handleInputChange}
 										placeholder="Confirm your password"
 										required
+										aria-label="Confirm password you would use for your account"
 									/>
 								</div>
 
 								<button
 									type="submit"
 									className={`btn btn-primary btn-lg w-100 fw-bold ${submitting ? "disabled" : ""}`}
-									disabled={submitting}>
+									disabled={submitting}
+									aria-label={submitting ? "Creating Account..." : "Complete Account Setup"}>
 									{submitting ? (
 										<>
 											<span className="spinner-border spinner-border-sm me-2" role="status">
@@ -242,4 +246,4 @@ const SignupPage = () => {
 	);
 };
 
-export default SignupPage;
+export default Register;

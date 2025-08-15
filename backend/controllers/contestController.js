@@ -10,7 +10,7 @@ export const uploadContestEntry = (req, res) => {
 
 		try {
 			const { title, description } = req.body;
-			const userId = req.user?.id || "689eed59819fadc94d3b257a";
+			const userId = req.user._id;
 
 			if (!req.file) {
 				return res.status(400).json({ error: "Video file is required" });
@@ -35,50 +35,76 @@ export const uploadContestEntry = (req, res) => {
 
 export const getLeaderboard = async (req, res) => {
 	try {
-		const { sortBy = "votes", sortOrder = "desc" } = req.query;
-		const currentUserId = req.user?.id; // Assuming user ID is available in req.user
+		let { page = 1, limit = 10, sortBy = "votes", sortOrder = "desc" } = req.query;
+		const currentUserId = req.user._id;
+
+		page = parseInt(page, 10);
+		limit = parseInt(limit, 10);
 
 		let sortOptions = {};
-
-		// Handle sorting options
 		if (sortBy === "votes") {
 			sortOptions = { votes: sortOrder === "desc" ? -1 : 1 };
 		} else if (sortBy === "time") {
 			sortOptions = { uploadTimestamp: sortOrder === "desc" ? -1 : 1 };
 		} else {
-			// Default to votes descending
 			sortOptions = { votes: -1 };
 		}
 
-		const entries = await Contest.find().sort(sortOptions).populate("userId", "name");
+		const entries = await Contest.find()
+			.sort(sortOptions)
+			.skip((page - 1) * limit)
+			.limit(limit)
+			.populate("userId", "name")
+			.lean();
 
-		// Transform the data to match frontend expectations
-		const transformedEntries = entries.map((entry) => ({
+		const formattedEntries = entries.map((entry) => ({
 			id: entry._id,
-			userName: entry.userId.name,
+			userName: entry.userId?.name,
 			title: entry.title,
 			description: entry.description,
 			videoUrl: `http://localhost:${process.env.PORT}${entry.videoUrl}`,
 			uploadTime: entry.uploadTimestamp,
 			totalVotes: entry.votes,
-			isCurrentUser: currentUserId ? entry.userId._id.toString() === currentUserId.toString() : false,
+			isCurrentUser: currentUserId ? entry.userId._id.equals(currentUserId) : false,
 		}));
 
-		res.json(transformedEntries);
-	} catch (err) {
-		res.status(500).json({ error: err.message });
+		const totalDocuments = await Contest.countDocuments();
+		const totalPages = Math.ceil(totalDocuments / limit);
+		const hasNextPage = page < totalPages ? true : false;
+		const hasPreviousPage = page > 1 ? true : false;
+
+		const pagination = { totalDocuments, totalPages, hasNextPage, hasPreviousPage, limit };
+		const filters = { sortBy, sortOrder };
+
+		return res.status(200).json({ success: true, data: formattedEntries, pagination, filters });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ success: false, error: error.message });
 	}
 };
 
 export const voteEntry = async (req, res) => {
 	try {
-		const entry = await Contest.findById(req.params.entryId);
-		if (!entry) return res.status(404).json({ error: "Entry not found" });
+		const { entryId } = req.params;
+		if (!entryId) {
+			return res.status(400).json({ success: false, error: "Provide a valid Entry ID" });
+		}
+
+		const currentUserId = req.user._id;
+
+		const entry = await Contest.findOne({ _id: entryId });
+		if (!entry) {
+			return res.status(404).json({ success: false, error: "Entry not found" });
+		}
+
+		if (entry.userId.equals(currentUserId)) {
+			return res.status(404).json({ success: false, error: "Cannot self vote!" });
+		}
 
 		entry.votes += 1;
 		await entry.save();
 
-		res.json({ votes: entry.votes });
+		return res.status(200).json({ success: true, message: "Voted successfully" });
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}

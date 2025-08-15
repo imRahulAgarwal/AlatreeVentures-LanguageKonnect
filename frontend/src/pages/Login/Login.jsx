@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { apiUrl } from "../../configs/envExport";
 
-const apiUrl = process.env.REACT_APP_API_URL;
-
-const LoginPage = () => {
+const Login = () => {
 	const [formData, setFormData] = useState({
 		email: "",
 		password: "",
@@ -42,6 +41,8 @@ const LoginPage = () => {
 				email: formData.email.trim(),
 				password: formData.password,
 			});
+
+			console.log(res);
 
 			// Store token if returned
 			if (res.data.token) {
@@ -84,6 +85,7 @@ const LoginPage = () => {
 										onChange={handleInputChange}
 										placeholder="Enter your email"
 										required
+										aria-label="Email address to login"
 									/>
 								</div>
 
@@ -100,6 +102,7 @@ const LoginPage = () => {
 										onChange={handleInputChange}
 										placeholder="Enter your password"
 										required
+										aria-label="Password of your account to login"
 									/>
 								</div>
 
@@ -134,4 +137,4 @@ const LoginPage = () => {
 	);
 };
 
-export default LoginPage;
+export default Login;

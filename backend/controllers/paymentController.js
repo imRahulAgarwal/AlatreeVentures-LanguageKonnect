@@ -21,7 +21,7 @@ export const createCheckoutSession = async (req, res) => {
 					quantity: 1,
 				},
 			],
-			success_url: `${process.env.FRONTEND_URL}/signup?session_id={CHECKOUT_SESSION_ID}&success=true`,
+			success_url: `${process.env.FRONTEND_URL}/register?session_id={CHECKOUT_SESSION_ID}&success=true`,
 			cancel_url: `${process.env.FRONTEND_URL}/cancel`,
 		});
 
