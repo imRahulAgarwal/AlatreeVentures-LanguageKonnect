@@ -29,7 +29,6 @@ const Register = () => {
 
 	const fetchCustomerData = useCallback(async () => {
 		try {
-			console.log(sessionId);
 			const response = await axios.get(`${apiUrl}/api/users/data/${sessionId}`);
 			const {
 				data: { email, name },
@@ -41,7 +40,7 @@ const Register = () => {
 				name: name || "",
 			}));
 		} catch (error) {
-			console.log(error);
+			console.error(error);
 			toast.error("Failed to load customer data. Please try again.");
 			console.error("Error fetching customer data:", error);
 		} finally {

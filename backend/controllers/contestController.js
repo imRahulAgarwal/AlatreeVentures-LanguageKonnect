@@ -4,7 +4,7 @@ import uploadVideo from "../utils/multerConfig.js";
 export const uploadContestEntry = (req, res) => {
 	uploadVideo.single("video")(req, res, async (err) => {
 		if (err) {
-			console.log(err);
+			console.error(err);
 			return res.status(400).json({ success: false, error: err.message });
 		}
 
@@ -27,7 +27,7 @@ export const uploadContestEntry = (req, res) => {
 
 			return res.status(200).json({ success: false, entry: entry.toObject() });
 		} catch (error) {
-			console.log(error);
+			console.error(error);
 			res.status(500).json({ success: false, error: error.message });
 		}
 	});
@@ -78,7 +78,7 @@ export const getLeaderboard = async (req, res) => {
 
 		return res.status(200).json({ success: true, data: formattedEntries, pagination, filters });
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 		return res.status(500).json({ success: false, error: error.message });
 	}
 };

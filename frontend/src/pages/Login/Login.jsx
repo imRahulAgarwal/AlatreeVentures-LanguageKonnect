@@ -42,8 +42,6 @@ const Login = () => {
 				password: formData.password,
 			});
 
-			console.log(res);
-
 			// Store token if returned
 			if (res.data.token) {
 				localStorage.setItem("token", res.data.token);

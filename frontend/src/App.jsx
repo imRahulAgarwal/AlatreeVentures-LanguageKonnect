@@ -11,6 +11,7 @@ import Register from "./pages/Register/Register";
 import Payment from "./pages/Payment/Payment";
 import Terms from "./pages/Terms/Terms";
 import Privacy from "./pages/Privacy/Privacy";
+import ReferralRedirect from "./pages/Referral/ReferralRedirect";
 
 const App = () => {
 	const [isLoading, setIsLoading] = useState(true);
@@ -27,15 +28,15 @@ const App = () => {
 					});
 
 					const responseData = result.data;
-					console.log(responseData);
 					if (responseData.success) {
 						setIsLoggedIn(true);
+						setUser(responseData.user)
 					} else {
 						setIsLoggedIn(false);
 						setUser(null);
 					}
 				} catch (error) {
-					console.log(error);
+					console.error(error);
 					setIsLoggedIn(false);
 					setUser(null);
 					toast.error("Failed to get user data!");
@@ -65,6 +66,7 @@ const App = () => {
 					<Route path="dashboard" element={<Dashboard user={user} />} />
 				) : (
 					<>
+						<Route path="/refer" element={<ReferralRedirect />} />
 						<Route path="register" element={<Register />} />
 						<Route path="login" element={<Login />} />
 						<Route path="access" element={<Payment />} />

@@ -29,7 +29,7 @@ export async function login(req, res) {
 			success: true,
 			message: "Login successful",
 			token,
-			user: { id: user._id, name: user.name, email: user.email },
+			user: { id: user._id, name: user.name, email: user.email, referralCode: user.referralCode },
 		});
 	} catch (error) {
 		console.error("Login error:", error);
@@ -51,7 +51,7 @@ export async function getUserData(req, res) {
 
 		return res.status(200).json({ success: true, data: { name: user.name, email: user.email } });
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 		return res.status(500).json({ success: false, error: error.message });
 	}
 }
@@ -63,7 +63,6 @@ export async function saveUserData(req, res) {
 	}
 	const { name, email, password, confirmPassword } = req.body;
 	try {
-		console.log(req.body);
 		if (password !== confirmPassword) {
 			return res.status(400).json({ success: false, error: "Passwords are not same" });
 		}
@@ -81,13 +80,20 @@ export async function saveUserData(req, res) {
 
 		return res.status(200).json({ success: true, message: "User registered successfully!" });
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 		return res.status(500).json({ success: false, error: error.message });
 	}
 }
 
 export async function profile(req, res) {
-	return res
-		.status(200)
-		.json({ success: true, user: { _id: req.user._id, name: req.user.name, email: req.user.email } });
+	return res.status(200).json({
+		success: true,
+		user: {
+			id: req.user._id,
+			name: req.user.name,
+			email: req.user.email,
+			referralCode: req.user.referralCode,
+			totalReferred: req.user.credits,
+		},
+	});
 }

@@ -9,10 +9,12 @@ const Payment = () => {
 	const handlePurchase = async () => {
 		setLoading(true);
 
-		console.log(apiUrl);
+		const urlParams = new URLSearchParams(window.location.search);
+		const referralCode = urlParams.get("referralCode");
 
 		try {
-			const response = await axios.post(`${apiUrl}/api/payments/create-checkout-session`, {});
+			const finalUrl = `${apiUrl}/api/payments/create-checkout-session?referralCode=${referralCode}`;
+			const response = await axios.post(finalUrl, {});
 
 			const responseData = response.data;
 

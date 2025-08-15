@@ -46,7 +46,7 @@ const UploadMediaModal = ({ closeUploadModal, onUploadSuccess }) => {
 
 			closeUploadModal();
 		} catch (error) {
-			console.log(error);
+			console.error(error);
 			toast.error("Failed to upload video");
 		} finally {
 			setUploading(false);

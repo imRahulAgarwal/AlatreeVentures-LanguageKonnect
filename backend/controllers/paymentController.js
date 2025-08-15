@@ -1,6 +1,7 @@
 import Stripe from "stripe";
-import User from "../models/User.js";
+import User from "../models/user.js";
 import Referral from "../models/referral.js";
+import { generateReferralCode } from "../utils/generateReferralCode.js";
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -9,6 +10,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 export const createCheckoutSession = async (req, res) => {
 	try {
+		const referralCode = req.query.referralCode || "";
 		const session = await stripe.checkout.sessions.create({
 			mode: "payment",
 			line_items: [
@@ -21,13 +23,14 @@ export const createCheckoutSession = async (req, res) => {
 					quantity: 1,
 				},
 			],
+			metadata: { referralCode },
 			success_url: `${process.env.FRONTEND_URL}/register?session_id={CHECKOUT_SESSION_ID}&success=true`,
 			cancel_url: `${process.env.FRONTEND_URL}/cancel`,
 		});
 
-		res.json({ url: session.url });
+		res.status(200).json({ url: session.url });
 	} catch (err) {
-		console.log(err);
+		console.error(err);
 		res.status(500).json({ error: err.message });
 	}
 };
@@ -39,7 +42,7 @@ export const handleStripeWebhook = async (req, res) => {
 	try {
 		event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
 	} catch (err) {
-		console.log(err);
+		console.error(err);
 		return res.status(400).send(`Webhook Error: ${err.message}`);
 	}
 
@@ -54,24 +57,29 @@ export const handleStripeWebhook = async (req, res) => {
 
 		let user = await User.findOne({ email });
 		if (!user) {
-			user = await User.create({ name, email, sessionId, isPaid: true });
+			user = await User.create({ name, email, sessionId, isPaid: true, referralCode: generateReferralCode() });
 		} else {
 			user.name = name;
 			user.sessionId = sessionId;
 			user.isPaid = true;
+			user.referralCode = generateReferralCode();
 			await user.save();
 		}
 
-		// Handle referral tickets
-		// const referralCode = new URL(session.success_url).searchParams.get("ref");
-		// if (referralCode) {
-		// 	const referrer = await User.findOne({ referralCode });
-		// 	if (referrer) {
-		// 		await Referral.updateMany({ referrerId: referrer._id, referredUserId: user._id }, { status: "paid" });
-		// 		referrer.tickets += 1;
-		// 		await referrer.save();
-		// 	}
-		// }
+		const referralCode = session.metadata.referralCode;
+		if (referralCode) {
+			const referrer = await User.findOne({ referralCode });
+			if (referrer) {
+				await Referral.updateMany({ referrerId: referrer._id, referredUserId: user._id }, { status: "paid" });
+				referrer.credits += 1;
+				await referrer.save();
+
+				if (!user.referredBy) {
+					user.referredBy = referrer._id;
+					await user.save();
+				}
+			}
+		}
 	}
 
 	res.json({ received: true });

@@ -150,7 +150,7 @@ const Leaderboard = ({
 									Loading...
 								</td>
 							</tr>
-						) : (
+						) : data.length ? (
 							table.getRowModel().rows.map((row) => (
 								<React.Fragment key={row.id}>
 									<tr>
@@ -179,6 +179,12 @@ const Leaderboard = ({
 									)}
 								</React.Fragment>
 							))
+						) : (
+							<tr>
+								<td colSpan={columns.length} className="text-center">
+									No Videos Uploaded!
+								</td>
+							</tr>
 						)}
 					</tbody>
 				</table>

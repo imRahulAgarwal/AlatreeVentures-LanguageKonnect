@@ -4,8 +4,9 @@ import UploadMediaModal from "./UploadMediaModal/UploadMediaModal";
 import { apiUrl } from "../../configs/envExport";
 import axios from "axios";
 import VideoModal from "./Leaderboard/VideoModal/VideoModal";
+import { toast } from "react-toastify";
 
-const Dashboard = () => {
+const Dashboard = ({ user }) => {
 	const [leaderboardData, setLeaderboardData] = useState([]);
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 	const [sorting, setSorting] = useState([{ desc: true, id: "totalVotes" }]);
@@ -56,7 +57,6 @@ const Dashboard = () => {
 		async (videoId) => {
 			try {
 				const token = localStorage.getItem("token");
-				console.log(videoId);
 				const result = await axios.post(
 					`${apiUrl}/api/contest/vote/${videoId}`,
 					{},
@@ -75,6 +75,12 @@ const Dashboard = () => {
 		[fetchLeaderboard]
 	);
 
+	const handleReferralButtonClick = () => {
+		const referralUrl = `${import.meta.env.VITE_APP_URL}/refer?referralCode=${user.referralCode}`;
+		navigator.clipboard.writeText(referralUrl);
+		toast.success("Referral Link copied!");
+	};
+
 	useEffect(() => {
 		fetchLeaderboard();
 	}, [fetchLeaderboard]);
@@ -87,9 +93,15 @@ const Dashboard = () => {
 				{/* Header with upload button */}
 				<div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
 					<h2 className="fw-bold text-primary mb-3 mb-md-0">Leaderboard</h2>
-					<button className="btn btn-primary fw-bold" onClick={() => setShowUploadModal(true)}>
-						<i className="bi bi-upload me-2"></i> Upload New Video
-					</button>
+					<div className="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
+						<button className="btn btn-primary fw-bold" onClick={() => setShowUploadModal(true)}>
+							<i className="bi bi-upload me-2"></i> Upload New Video
+						</button>
+						<button onClick={handleReferralButtonClick} className="btn btn-primary fw-bold">
+							Copy Referral Link
+						</button>
+						<span>Total Referred: {user.totalReferred}</span>
+					</div>
 				</div>
 
 				{/* Leaderboard Table */}
