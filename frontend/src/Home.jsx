@@ -14,11 +14,14 @@ const Home = ({ isLoggedIn }) => {
 
 							<div className="d-grid gap-2">
 								{isLoggedIn ? (
-									<Link to="/dashboard">
-										<button className="btn btn-primary btn-lg fw-bold">
-											Dashboard of Founders Lifetime Access
-										</button>
-									</Link>
+									<div className="d-flex justify-content-center align-items-center gap-2">
+										<Link to="/dashboard">
+											<button className="btn btn-primary btn-lg fw-bold">Dashboard</button>
+										</Link>
+										<Link to="/referrals">
+											<button className="btn btn-success btn-lg fw-bold">Referrals</button>
+										</Link>
+									</div>
 								) : (
 									<div className="d-flex flex-column align-items-center gap-2">
 										<Link to="/access" className="w-100">
@@ -38,8 +41,12 @@ const Home = ({ isLoggedIn }) => {
 					</div>
 
 					<div className="position-absolute bottom-0 mb-4 d-flex gap-2">
-						<Link to="/terms" className="text-decoration-none">Terms & Conditions</Link>
-						<Link to="/terms" className="text-decoration-none">Privacy Policy</Link>
+						<Link to="/terms" className="text-decoration-none">
+							Terms & Conditions
+						</Link>
+						<Link to="/terms" className="text-decoration-none">
+							Privacy Policy
+						</Link>
 					</div>
 				</div>
 				<div className="col-md-6 bg-primary d-none d-md-flex align-items-center justify-content-center">

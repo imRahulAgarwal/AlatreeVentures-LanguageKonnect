@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider } from "react-router";
 import Home from "./Home";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import UserLayout from "./layout/UserLayout";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import axios from "axios";
@@ -12,6 +12,7 @@ import Payment from "./pages/Payment/Payment";
 import Terms from "./pages/Terms/Terms";
 import Privacy from "./pages/Privacy/Privacy";
 import ReferralRedirect from "./pages/Referral/ReferralRedirect";
+import Referrals from "./pages/Referrals/Referrals";
 
 const App = () => {
 	const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +31,7 @@ const App = () => {
 					const responseData = result.data;
 					if (responseData.success) {
 						setIsLoggedIn(true);
-						setUser(responseData.user)
+						setUser(responseData.user);
 					} else {
 						setIsLoggedIn(false);
 						setUser(null);
@@ -39,7 +40,6 @@ const App = () => {
 					console.error(error);
 					setIsLoggedIn(false);
 					setUser(null);
-					toast.error("Failed to get user data!");
 				}
 			} else {
 				setIsLoggedIn(false);
@@ -58,12 +58,15 @@ const App = () => {
 
 	const router = createBrowserRouter(
 		createRoutesFromElements(
-			<Route path="/" element={<UserLayout />}>
+			<Route path="/" element={<UserLayout isLoggedIn={isLoggedIn} />}>
 				<Route index element={<Home isLoggedIn={isLoggedIn} />} />
 				<Route path="terms" element={<Terms />} />
 				<Route path="privacy" element={<Privacy />} />
 				{isLoggedIn ? (
-					<Route path="dashboard" element={<Dashboard user={user} />} />
+					<>
+						<Route path="dashboard" element={<Dashboard user={user} />} />
+						<Route path="referrals" element={<Referrals user={user} />} />
+					</>
 				) : (
 					<>
 						<Route path="/refer" element={<ReferralRedirect />} />

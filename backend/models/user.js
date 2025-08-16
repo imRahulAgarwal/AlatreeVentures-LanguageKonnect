@@ -15,6 +15,9 @@ const userSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
+// Add an index for referralCode to make lookups fast
+userSchema.index({ referralCode: 1 });
+
 const User = mongoose.model("users", userSchema);
 
 export default User;

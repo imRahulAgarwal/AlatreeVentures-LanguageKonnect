@@ -11,6 +11,12 @@ const stripe = new Stripe(STRIPE_SECRET_KEY);
 export const createCheckoutSession = async (req, res) => {
 	try {
 		const referralCode = req.query.referralCode || "";
+
+		let referrer = null;
+		if (referralCode) {
+			referrer = await User.findOne({ referralCode });
+		}
+
 		const session = await stripe.checkout.sessions.create({
 			mode: "payment",
 			line_items: [
@@ -27,6 +33,16 @@ export const createCheckoutSession = async (req, res) => {
 			success_url: `${process.env.FRONTEND_URL}/register?session_id={CHECKOUT_SESSION_ID}&success=true`,
 			cancel_url: `${process.env.FRONTEND_URL}/cancel`,
 		});
+
+		if (referrer) {
+			await Referral.create({
+				referrerId: referrer._id,
+				stripeSessionId: session.id,
+				referralCodeUsed: referralCode,
+				status: "pending",
+				expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+			});
+		}
 
 		res.status(200).json({ url: session.url });
 	} catch (err) {
@@ -56,21 +72,45 @@ export const handleStripeWebhook = async (req, res) => {
 		const sessionId = session.id;
 
 		let user = await User.findOne({ email });
+		const wasAlreadyPaid = user?.isPaid;
 		if (!user) {
 			user = await User.create({ name, email, sessionId, isPaid: true, referralCode: generateReferralCode() });
 		} else {
 			user.name = name;
 			user.sessionId = sessionId;
 			user.isPaid = true;
-			user.referralCode = generateReferralCode();
+			if (!user.referralCode) {
+				user.referralCode = generateReferralCode();
+			}
 			await user.save();
 		}
 
 		const referralCode = session.metadata.referralCode;
-		if (referralCode) {
+
+		// Match referral using stripeSessionId first
+		let referral = await Referral.findOne({ stripeSessionId: sessionId });
+
+		// If not found, fallback to metadata.referralCode
+		if (!referral && referralCode) {
 			const referrer = await User.findOne({ referralCode });
 			if (referrer) {
-				await Referral.updateMany({ referrerId: referrer._id, referredUserId: user._id }, { status: "paid" });
+				referral = await Referral.create({
+					referrerId: referrer._id,
+					referredUserId: user._id,
+					stripeSessionId: sessionId,
+					referralCodeUsed: referralCode,
+					status: "paid",
+				});
+			}
+		}
+
+		if (referral && !wasAlreadyPaid) {
+			referral.referredUserId = user._id;
+			referral.status = "paid";
+			await referral.save();
+
+			const referrer = await User.findById(referral.referrerId);
+			if (referrer) {
 				referrer.credits += 1;
 				await referrer.save();
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { apiUrl } from "../../configs/envExport";
+import { useNavigate } from "react-router";
 
 const Register = () => {
 	const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const Register = () => {
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 	const [sessionId, setSessionId] = useState("");
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -20,10 +22,9 @@ const Register = () => {
 
 		if (currentSessionId) {
 			setSessionId(currentSessionId);
-			// fetchCustomerData();
 		} else {
 			setLoading(false);
-			toast.error("Invalid access. Please complete payment first.");
+			navigate("/access");
 		}
 	}, []);
 
@@ -41,7 +42,6 @@ const Register = () => {
 			}));
 		} catch (error) {
 			console.error(error);
-			toast.error("Failed to load customer data. Please try again.");
 			console.error("Error fetching customer data:", error);
 		} finally {
 			setLoading(false);
@@ -103,7 +103,7 @@ const Register = () => {
 				window.location.href = "/login";
 			}, 1500);
 		} catch (error) {
-			toast.error(error.response?.data?.error || "Failed to create account");
+			toast.error("Failed to create account");
 		} finally {
 			setSubmitting(false);
 		}

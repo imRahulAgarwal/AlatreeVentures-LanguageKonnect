@@ -51,8 +51,9 @@ const Login = () => {
 			setTimeout(() => {
 				window.location.href = "/dashboard";
 			}, 1500);
-		} catch (error) {
-			toast.error(error.response?.data?.error || "Login failed");
+		} catch (err) {
+			console.log(err);
+			toast.error("Please try again later");
 		} finally {
 			setSubmitting(false);
 		}

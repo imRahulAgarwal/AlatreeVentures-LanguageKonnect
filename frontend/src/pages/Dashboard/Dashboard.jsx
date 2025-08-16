@@ -5,6 +5,7 @@ import { apiUrl } from "../../configs/envExport";
 import axios from "axios";
 import VideoModal from "./Leaderboard/VideoModal/VideoModal";
 import { toast } from "react-toastify";
+import socketService from "../../services/socket";
 
 const Dashboard = ({ user }) => {
 	const [leaderboardData, setLeaderboardData] = useState([]);
@@ -85,6 +86,17 @@ const Dashboard = ({ user }) => {
 		fetchLeaderboard();
 	}, [fetchLeaderboard]);
 
+	useEffect(() => {
+		const socket = socketService.connect();
+		socket.on("new_entry", (entry) => {
+			setLeaderboardData((prev) => [...prev, entry]);
+		});
+
+		socket.on("new_vote_entry", (updatedEntry) => {
+			setLeaderboardData((prev) => prev.map((entry) => (entry.id === updatedEntry.id ? updatedEntry : entry)));
+		});
+	}, []);
+
 	setInterval(() => fetchLeaderboard(), 300000);
 
 	return (
@@ -116,6 +128,7 @@ const Dashboard = ({ user }) => {
 					loading={loading}
 					handleViewVideoButton={handleViewVideoButton}
 					handleVoteButton={handleVoteButton}
+					user={user}
 				/>
 			</div>
 

@@ -13,6 +13,7 @@ const Leaderboard = ({
 	loading = false,
 	handleVoteButton,
 	handleViewVideoButton,
+	user,
 }) => {
 	const [expandedRow, setExpandedRow] = useState(null);
 	const [isMobile, setIsMobile] = useState(false);
@@ -66,7 +67,7 @@ const Leaderboard = ({
 				header: "Actions",
 				cell: ({ row }) => (
 					<div className="d-flex gap-2">
-						{!row.original.isCurrentUser && (
+						{row.original.userId !== user.id && (
 							<button
 								className="btn btn-sm btn-success"
 								onClick={() => handleVoteButton(row.original.id)}>
@@ -83,7 +84,15 @@ const Leaderboard = ({
 		];
 
 		return isMobile ? baseColumns.filter((col) => col.meta?.priority === 1) : baseColumns;
-	}, [expandedRow, isMobile, pagination.pageIndex, pagination.pageSize, handleViewVideoButton, handleVoteButton]);
+	}, [
+		expandedRow,
+		isMobile,
+		pagination.pageIndex,
+		pagination.pageSize,
+		handleViewVideoButton,
+		handleVoteButton,
+		user,
+	]);
 
 	const table = useReactTable({
 		data,
@@ -111,9 +120,22 @@ const Leaderboard = ({
 			},
 			{ key: "totalVotes", header: "Votes", value: row.original.totalVotes },
 			{
-				key: "isCurrentUser",
-				header: "You?",
-				value: row.original.isCurrentUser ? "🔥" : "",
+				key: "actions",
+				header: "Actions",
+				value: (
+					<div className="d-flex gap-2">
+						{row.original.userId !== user.id && (
+							<button
+								className="btn btn-sm btn-success"
+								onClick={() => handleVoteButton(row.original.id)}>
+								👍 Vote
+							</button>
+						)}
+						<button className="btn btn-sm btn-primary" onClick={() => handleViewVideoButton(row.original)}>
+							View Video
+						</button>
+					</div>
+				),
 			},
 		];
 	};
@@ -224,7 +246,7 @@ const Leaderboard = ({
 					{/* Page Info */}
 					<div className="col-12 col-sm-4 text-center">
 						<span className="fw-semibold">
-							Page {pagination.pageIndex + 1} of {pageCount}
+							Page {pageCount > 0 ? pagination.pageIndex + 1 : 0} of {pageCount}
 						</span>
 					</div>
 

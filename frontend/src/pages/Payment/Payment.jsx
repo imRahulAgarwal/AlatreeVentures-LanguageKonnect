@@ -25,8 +25,6 @@ const Payment = () => {
 			}
 		} catch (error) {
 			console.error("Checkout error:", error);
-
-			// Show error toast
 			toast.error("Payment initialization failed. Please try again.");
 			setLoading(false);
 		}

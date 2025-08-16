@@ -1,4 +1,5 @@
 import Contest from "../models/contest.js";
+import { io } from "../server.js";
 import uploadVideo from "../utils/multerConfig.js";
 
 export const uploadContestEntry = (req, res) => {
@@ -16,7 +17,7 @@ export const uploadContestEntry = (req, res) => {
 				return res.status(400).json({ error: "Video file is required" });
 			}
 
-			const videoUrl = `/uploads/${req.file.filename}`;
+			const videoUrl = `uploads/${req.file.filename}`;
 
 			const entry = await Contest.create({
 				userId,
@@ -24,6 +25,19 @@ export const uploadContestEntry = (req, res) => {
 				title,
 				description,
 			});
+
+			const formattedEntry = {
+				id: entry._id,
+				userId: req.user._id,
+				userName: req.user.name,
+				title: entry.title,
+				description: entry.description,
+				videoUrl: `${process.env.BACKEND_URL}/${entry.videoUrl}`,
+				uploadTime: entry.uploadTimestamp,
+				totalVotes: entry.votes || 0,
+			};
+
+			io.emit("new_entry", formattedEntry);
 
 			return res.status(200).json({ success: false, entry: entry.toObject() });
 		} catch (error) {
@@ -36,7 +50,6 @@ export const uploadContestEntry = (req, res) => {
 export const getLeaderboard = async (req, res) => {
 	try {
 		let { page = 1, limit = 10, sortBy = "votes", sortOrder = "desc" } = req.query;
-		const currentUserId = req.user._id;
 
 		page = parseInt(page, 10);
 		limit = parseInt(limit, 10);
@@ -59,13 +72,13 @@ export const getLeaderboard = async (req, res) => {
 
 		const formattedEntries = entries.map((entry) => ({
 			id: entry._id,
+			userId: entry.userId?._id,
 			userName: entry.userId?.name,
 			title: entry.title,
 			description: entry.description,
-			videoUrl: `http://localhost:${process.env.PORT}${entry.videoUrl}`,
+			videoUrl: `${process.env.BACKEND_URL}/${entry.videoUrl}`,
 			uploadTime: entry.uploadTimestamp,
 			totalVotes: entry.votes,
-			isCurrentUser: currentUserId ? entry.userId._id.equals(currentUserId) : false,
 		}));
 
 		const totalDocuments = await Contest.countDocuments();
@@ -103,6 +116,18 @@ export const voteEntry = async (req, res) => {
 
 		entry.votes += 1;
 		await entry.save();
+
+		const updatedEntry = await Contest.findOne({ _id: entryId }).populate("userId", "_id name");
+		io.emit("new_vote_entry", {
+			id: updatedEntry._id,
+			userId: updatedEntry.userId?._id,
+			userName: updatedEntry.userId?.name,
+			title: updatedEntry.title,
+			description: updatedEntry.description,
+			videoUrl: `${process.env.BACKEND_URL}/${entry.videoUrl}`,
+			uploadTime: updatedEntry.uploadTimestamp,
+			totalVotes: updatedEntry.votes,
+		});
 
 		return res.status(200).json({ success: true, message: "Voted successfully" });
 	} catch (err) {
